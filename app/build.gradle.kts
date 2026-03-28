@@ -21,13 +21,12 @@ repositories {
 }
 
 dependencies {
-    // Use JUnit Jupiter for testing.
     testImplementation(libs.junit.jupiter)
-
     testRuntimeOnly("org.junit.platform:junit-platform-launcher")
-
-    // This dependency is used by the application.
     implementation(libs.guava)
+    implementation("org.postgresql:postgresql:42.7.3")
+    implementation("com.zaxxer:HikariCP:5.1.0")
+    implementation("com.fasterxml.jackson.core:jackson-databind:2.17.2")
     compileOnly("jakarta.servlet:jakarta.servlet-api:6.0.0")
     compileOnly("jakarta.servlet.jsp:jakarta.servlet.jsp-api:3.1.1")
 }
