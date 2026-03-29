@@ -1,6 +1,7 @@
 package controller;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
+import dao.CurrencyDao;
 import dto.ExchangeDto;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.annotation.WebServlet;
@@ -8,20 +9,19 @@ import jakarta.servlet.http.HttpServlet;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 
-import model.ExchangeRate;
-
 import dao.ExchangeRatesDao;
+import service.ExchangeService;
 import util.ParamValidator;
 
 import javax.sql.DataSource;
 
 import java.io.IOException;
 import java.math.BigDecimal;
-import java.math.RoundingMode;
 
 @WebServlet("/exchange")
 public class ExchangeServlet extends HttpServlet {
     private ExchangeRatesDao erDao;
+    private CurrencyDao currencyDao;
     private ObjectMapper mapper;
 
     @Override
@@ -29,6 +29,7 @@ public class ExchangeServlet extends HttpServlet {
         DataSource ds = (DataSource) getServletContext().getAttribute("dataSource");
 
         this.erDao = new ExchangeRatesDao(ds);
+        this.currencyDao = new CurrencyDao(ds);
         this.mapper = new ObjectMapper();
     }
 
@@ -43,16 +44,7 @@ public class ExchangeServlet extends HttpServlet {
         ParamValidator.validateNotNull(from, to, amountStr);
         BigDecimal amount = new BigDecimal(amountStr);
 
-        ExchangeRate exchangeRate = erDao.getExchangeRateByCode(from + to);
-
-        // TODO: сделать перевод валют через существующие (см. задание)
-        ExchangeDto exchangeDto = new ExchangeDto(
-                exchangeRate.getBaseCurrency(),
-                exchangeRate.getTargetCurrency(),
-                exchangeRate.getRate(),
-                amount,
-                amount.multiply(exchangeRate.getRate()));
-
+        ExchangeDto exchangeDto = (new ExchangeService(erDao, currencyDao)).convert(from, to, amount);
         resp.getWriter().println(mapper.writeValueAsString(exchangeDto));
     }
 }
