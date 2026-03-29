@@ -66,7 +66,7 @@ public class ExchangeRatesDao {
         }
     }
 
-    public boolean addExchangeRate(int baseCurrencyId, int targetCurrencyId, BigDecimal rate) throws SQLException {
+    public boolean addExchangeRate(int baseCurrencyId, int targetCurrencyId, BigDecimal rate) {
         String query =
                 "INSERT INTO ExchangeRates (BaseCurrencyId, TargetCurrencyId, Rate) " +
                 "VALUES (?, ?, ?)";
@@ -79,10 +79,12 @@ public class ExchangeRatesDao {
 
             int rows = ps.executeUpdate();
             return rows > 0;
+        } catch(SQLException e) {
+            throw new DatabaseException(e);
         }
     }
 
-    public boolean updateExchangeRate(int baseCurrencyId, int targetCurrencyId, BigDecimal newRate) throws SQLException{
+    public boolean updateExchangeRate(int baseCurrencyId, int targetCurrencyId, BigDecimal newRate) {
         String query = "UPDATE ExchangeRates SET rate = ? WHERE baseCurrencyId = ? and targetCurrencyId = ?";
         try (Connection conn = dataSource.getConnection();
              PreparedStatement ps = conn.prepareStatement(query)) {
@@ -93,6 +95,8 @@ public class ExchangeRatesDao {
 
             int rows = ps.executeUpdate();
             return rows > 0;
+        } catch(SQLException e) {
+            throw new DatabaseException(e);
         }
     }
 

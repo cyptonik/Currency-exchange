@@ -8,7 +8,6 @@ import jakarta.servlet.http.HttpServlet;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 
-import dto.ErrorResponseDto;
 import model.ExchangeRate;
 
 import dao.ExchangeRatesDao;
@@ -18,7 +17,6 @@ import javax.sql.DataSource;
 
 import java.io.IOException;
 import java.math.BigDecimal;
-import java.sql.SQLException;
 
 @WebServlet("/exchange")
 public class ExchangeServlet extends HttpServlet {
@@ -46,6 +44,7 @@ public class ExchangeServlet extends HttpServlet {
 
         ExchangeRate exchangeRate = erDao.getExchangeRateByCode(from + to);
 
+        // TODO: сделать перевод валют через существующие (см. задание)
         ExchangeDto exchangeDto = new ExchangeDto(
                 exchangeRate.getBaseCurrency(),
                 exchangeRate.getTargetCurrency(),
@@ -54,25 +53,5 @@ public class ExchangeServlet extends HttpServlet {
                 amount.multiply(exchangeRate.getRate()));
 
         resp.getWriter().println(mapper.writeValueAsString(exchangeDto));
-//        try {
-//            // TODO: сделать перевод валют через существующие (см. задание)
-//            ExchangeRate exchangeRate = erDao.getExchangeRateByCode(from + to);
-//            if (exchangeRate != null) {
-//                ExchangeDto exchangeDto = new ExchangeDto(
-//                        exchangeRate.getBaseCurrency(),
-//                        exchangeRate.getTargetCurrency(),
-//                        exchangeRate.getRate(),
-//                        amount,
-//                        amount.multiply(exchangeRate.getRate()));
-//
-//                resp.getWriter().println(mapper.writeValueAsString(exchangeDto));
-//            } else {
-//                resp.setStatus(HttpServletResponse.SC_NOT_FOUND);
-//                resp.getWriter().println(mapper.writeValueAsString(new ErrorResponseDto("Exchange rate is not present in the database")));
-//            }
-//        } catch(SQLException e) {
-//            resp.setStatus(HttpServletResponse.SC_INTERNAL_SERVER_ERROR);
-//            resp.getWriter().println(mapper.writeValueAsString(new ErrorResponseDto("Database error")));
-//        }
     }
 }
