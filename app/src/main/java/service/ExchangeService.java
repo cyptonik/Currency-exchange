@@ -17,9 +17,7 @@ public class ExchangeService {
     private final RoundingMode roundingMode;
 
     public ExchangeService(ExchangeRatesDao erDao, CurrencyDao currencyDao) {
-        this.erDao = erDao;
-        this.currencyDao = currencyDao;
-        this.roundingMode = RoundingMode.HALF_EVEN;
+        this(erDao, currencyDao, RoundingMode.HALF_EVEN);
     }
 
     public ExchangeService(ExchangeRatesDao erDao, CurrencyDao currencyDao, RoundingMode roundingMode) {
