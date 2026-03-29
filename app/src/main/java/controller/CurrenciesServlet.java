@@ -10,12 +10,11 @@ import jakarta.servlet.http.HttpServletResponse;
 import model.Currency;
 
 import dao.CurrencyDao;
-import dto.ErrorResponseDto;
+import util.ParamValidator;
 
 import javax.sql.DataSource;
 
 import java.io.IOException;
-import java.sql.SQLException;
 import java.util.List;
 
 @WebServlet("/currencies")
@@ -33,15 +32,9 @@ public class CurrenciesServlet extends HttpServlet {
     @Override
     protected void doGet(HttpServletRequest req, HttpServletResponse resp) throws ServletException, IOException {
         resp.setContentType("application/json");
-        try {
-            List<Currency> currencies = currencyDao.getAllCurrencies();
-            String json = mapper.writeValueAsString(currencies);
 
-            resp.getWriter().println(json);
-        } catch (SQLException e) {
-            resp.setStatus(HttpServletResponse.SC_INTERNAL_SERVER_ERROR);
-            resp.getWriter().println(mapper.writeValueAsString(new ErrorResponseDto("Database error")));
-        }
+        List<Currency> currencies = currencyDao.getAllCurrencies();
+        resp.getWriter().println(mapper.writeValueAsString(currencies));
     }
 
     @Override
@@ -51,26 +44,11 @@ public class CurrenciesServlet extends HttpServlet {
         String name = req.getParameter("name");
         String sign = req.getParameter("sign");
 
-        if (code == null || name == null || sign == null) {
-            resp.setStatus(HttpServletResponse.SC_BAD_REQUEST);
-            resp.getWriter().println(mapper.writeValueAsString(new ErrorResponseDto("Missing parameters")));
-            return;
-        }
+        ParamValidator.validateNotNull(code, name, sign);
 
-        try {
-            currencyDao.addCurrency(code, name, sign);
+        currencyDao.addCurrency(code, name, sign);
 
-            resp.setStatus(HttpServletResponse.SC_CREATED);
-            resp.getWriter().println(mapper.writeValueAsString(currencyDao.getCurrencyByCode(code)));
-        } catch(SQLException e) {
-            String sqlState = e.getSQLState();
-            if (sqlState != null && sqlState.startsWith("23")) {
-                resp.setStatus(HttpServletResponse.SC_CONFLICT);
-                resp.getWriter().println(mapper.writeValueAsString(new ErrorResponseDto("Currency with this code already exists")));
-            } else {
-                resp.setStatus(HttpServletResponse.SC_INTERNAL_SERVER_ERROR);
-                resp.getWriter().println(mapper.writeValueAsString(new ErrorResponseDto("Database error")));
-            }
-        }
+        resp.setStatus(HttpServletResponse.SC_CREATED);
+        resp.getWriter().println(mapper.writeValueAsString(currencyDao.getCurrencyByCode(code)));
     }
 }

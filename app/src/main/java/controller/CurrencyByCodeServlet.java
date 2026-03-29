@@ -9,6 +9,7 @@ import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import model.Currency;
 import dto.ErrorResponseDto;
+import util.ParamValidator;
 
 import javax.sql.DataSource;
 import java.io.IOException;
@@ -29,35 +30,14 @@ public class CurrencyByCodeServlet extends HttpServlet {
     @Override
     protected void doGet(HttpServletRequest req, HttpServletResponse resp) throws ServletException, IOException {
         resp.setContentType("application/json");
-        String pathInfo = req.getPathInfo();
 
-        if (pathInfo == null || pathInfo.equals("/")) {
-            resp.setStatus(HttpServletResponse.SC_BAD_REQUEST);
-            resp.getWriter().println(mapper.writeValueAsString(new ErrorResponseDto("Code not found")));
-            return;
-        }
+        String pathInfo = req.getPathInfo();
+        ParamValidator.validatePathInfo(pathInfo);
 
         String code = pathInfo.substring(1);
+        ParamValidator.validateCurrencyCode(code);
 
-        if (code.length() != 3) {
-            resp.setStatus(HttpServletResponse.SC_BAD_REQUEST);
-            resp.getWriter().println(mapper.writeValueAsString(new ErrorResponseDto("Incorrect currency")));
-            return;
-        }
-
-        try {
-            Currency currency = currencyDao.getCurrencyByCode(code);
-
-            if (currency == null) {
-                resp.setStatus(HttpServletResponse.SC_NOT_FOUND);
-                resp.getWriter().println(mapper.writeValueAsString(new ErrorResponseDto("Currency not found")));
-                return;
-            }
-
-            resp.getWriter().println(mapper.writeValueAsString(currency));
-        } catch (SQLException e) {
-            resp.setStatus(HttpServletResponse.SC_INTERNAL_SERVER_ERROR);
-            resp.getWriter().println(mapper.writeValueAsString(new ErrorResponseDto("Database error")));
-        }
+        Currency currency = currencyDao.getCurrencyByCode(code);
+        resp.getWriter().println(mapper.writeValueAsString(currency));
     }
 }
