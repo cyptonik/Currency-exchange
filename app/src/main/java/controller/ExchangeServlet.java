@@ -2,6 +2,7 @@ package controller;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.node.ObjectNode;
+import dto.ExchangeDto;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.annotation.WebServlet;
 import jakarta.servlet.http.HttpServlet;
@@ -34,29 +35,37 @@ public class ExchangeServlet extends HttpServlet {
 
     @Override
     protected void doGet(HttpServletRequest req, HttpServletResponse resp) throws ServletException, IOException {
+        resp.setContentType("application/json");
+
         String from = req.getParameter("from");
         String to = req.getParameter("to");
-        BigDecimal amount = new BigDecimal(req.getParameter("amount"));
+        String amountStr = req.getParameter("amount");
+
+        if (from == null || to == null || amountStr == null) {
+            resp.setStatus(HttpServletResponse.SC_BAD_REQUEST);
+            resp.getWriter().println(mapper.writeValueAsString(new ErrorResponseDto("Missing parameters")));
+            return;
+        }
+        BigDecimal amount = new BigDecimal(amountStr);
 
         try {
+            // TODO: сделать перевод валют через существующие (см. задание)
             ExchangeRate exchangeRate = erDao.getExchangeRateByCode(from + to);
             if (exchangeRate != null) {
-                // TODO: DTO надо
-                ObjectNode node = mapper.valueToTree(exchangeRate);
-                node.remove("id");
-                node.put("amount", amount);
-                node.put("convertedAmount", amount.multiply(exchangeRate.getRate()));
+                ExchangeDto exchangeDto = new ExchangeDto(
+                        exchangeRate.getBaseCurrency(),
+                        exchangeRate.getTargetCurrency(),
+                        exchangeRate.getRate(),
+                        amount,
+                        amount.multiply(exchangeRate.getRate()));
 
-                resp.setContentType("application/json");
-                resp.getWriter().println(mapper.writeValueAsString(node));
+                resp.getWriter().println(mapper.writeValueAsString(exchangeDto));
             } else {
-                resp.setStatus(HttpServletResponse.SC_INTERNAL_SERVER_ERROR);
-                resp.setContentType("application/json");
-                resp.getWriter().println(mapper.writeValueAsString(new ErrorResponseDto("Database error")));
+                resp.setStatus(HttpServletResponse.SC_NOT_FOUND);
+                resp.getWriter().println(mapper.writeValueAsString(new ErrorResponseDto("Exchange rate is not present in the database")));
             }
         } catch(SQLException e) {
             resp.setStatus(HttpServletResponse.SC_INTERNAL_SERVER_ERROR);
-            resp.setContentType("application/json");
             resp.getWriter().println(mapper.writeValueAsString(new ErrorResponseDto("Database error")));
         }
     }
