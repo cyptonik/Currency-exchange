@@ -51,7 +51,7 @@ public class ExchangeServlet extends HttpServlet {
                 exchangeRate.getTargetCurrency(),
                 exchangeRate.getRate(),
                 amount,
-                amount.multiply(exchangeRate.getRate()).setScale(2, RoundingMode.HALF_UP));
+                amount.multiply(exchangeRate.getRate()));
 
         resp.getWriter().println(mapper.writeValueAsString(exchangeDto));
     }
