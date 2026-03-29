@@ -8,12 +8,10 @@ import jakarta.servlet.http.HttpServlet;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import model.Currency;
-import dto.ErrorResponseDto;
 import util.ParamValidator;
 
 import javax.sql.DataSource;
 import java.io.IOException;
-import java.sql.SQLException;
 
 @WebServlet("/currency/*")
 public class CurrencyByCodeServlet extends HttpServlet {

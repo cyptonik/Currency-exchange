@@ -1,6 +1,7 @@
 package controller;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
+import exception.InvalidParametersException;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.annotation.WebServlet;
 import jakarta.servlet.http.HttpServlet;
@@ -69,8 +70,7 @@ public class ExchangeRateByCodeServlet extends HttpServlet {
                                             .filter(p -> p.startsWith("rate"))
                                             .map(p -> p.split("=")[1])
                                             .findFirst()
-                                            .orElseThrow(() -> new RuntimeException("rate missing"));
-        ParamValidator.validateNotNull(rateStr);
+                                            .orElseThrow(() -> new InvalidParametersException("Rate parameter is missing"));
 
         BigDecimal newRate = new BigDecimal(rateStr);
 
