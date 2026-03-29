@@ -1,11 +1,13 @@
 package exception;
 
-public class NotFoundException extends RuntimeException {
+import jakarta.servlet.http.HttpServletResponse;
+
+public class NotFoundException extends AppException {
     public NotFoundException(String message) {
-        super(message);
+        super(HttpServletResponse.SC_NOT_FOUND, message);
     }
 
     public NotFoundException(String message, Throwable cause) {
-        super(message, cause);
+        super(HttpServletResponse.SC_NOT_FOUND, message, cause);
     }
 }

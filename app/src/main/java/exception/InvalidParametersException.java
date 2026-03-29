@@ -1,11 +1,13 @@
 package exception;
 
-public class InvalidParametersException extends RuntimeException {
+import jakarta.servlet.http.HttpServletResponse;
+
+public class InvalidParametersException extends AppException {
     public InvalidParametersException() {
-        super("Required parameters are missing");
+        super(HttpServletResponse.SC_BAD_REQUEST, "Required parameters are missing");
     }
 
     public InvalidParametersException(String message) {
-        super(message);
+        super(HttpServletResponse.SC_BAD_REQUEST, message);
     }
 }

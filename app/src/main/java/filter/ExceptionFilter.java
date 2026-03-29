@@ -23,12 +23,8 @@ public class ExceptionFilter implements Filter {
         HttpServletResponse httpResp = (HttpServletResponse) resp;
         try {
             chain.doFilter(req, resp);
-        } catch (InvalidParametersException e) {
-            sendError(httpResp, HttpServletResponse.SC_BAD_REQUEST, e.getMessage());
-        } catch (NotFoundException e) {
-            sendError(httpResp, HttpServletResponse.SC_NOT_FOUND, e.getMessage());
-        } catch (AlreadyExistsException e) {
-            sendError(httpResp, HttpServletResponse.SC_CONFLICT, e.getMessage());
+        } catch(AppException e) {
+            sendError(httpResp, e.getStatus(), e.getMessage());
         } catch (DatabaseException e) {
             sendError(httpResp, HttpServletResponse.SC_INTERNAL_SERVER_ERROR, e.getMessage());
         }
