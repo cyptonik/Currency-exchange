@@ -3,6 +3,8 @@ package util;
 import exception.InvalidParametersException;
 
 public class ParamValidator {
+    private ParamValidator() {}
+
     public static void validateNotNull(String ... params) {
         for (String i : params) {
             if (i == null) {

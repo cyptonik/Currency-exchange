@@ -3,6 +3,7 @@ package dto;
 import model.Currency;
 
 import java.math.BigDecimal;
+import java.math.RoundingMode;
 
 public class ExchangeDto {
     private Currency baseCurrency;
@@ -14,9 +15,9 @@ public class ExchangeDto {
     public ExchangeDto(Currency baseCurrency, Currency targetCurrency, BigDecimal rate, BigDecimal amount, BigDecimal convertedAmount) {
         this.baseCurrency = baseCurrency;
         this.targetCurrency = targetCurrency;
-        this.rate = rate;
-        this.amount = amount;
-        this.convertedAmount = convertedAmount;
+        this.rate = rate.setScale(2, RoundingMode.HALF_UP);
+        this.amount = amount.setScale(2, RoundingMode.HALF_UP);
+        this.convertedAmount = convertedAmount.setScale(2, RoundingMode.HALF_UP);
     }
 
     public Currency getBaseCurrency() {
