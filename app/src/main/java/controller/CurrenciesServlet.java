@@ -48,26 +48,12 @@ public class CurrenciesServlet extends HttpServlet {
     protected void doPost(HttpServletRequest req, HttpServletResponse resp) throws ServletException, IOException {
         resp.setContentType("application/json");
         String code = req.getParameter("code");
-
-        if (code == null) {
-            resp.setStatus(HttpServletResponse.SC_BAD_REQUEST);
-            resp.getWriter().println(mapper.writeValueAsString(new ErrorResponseDto("Code parameter not found")));
-            return;
-        }
-
         String name = req.getParameter("name");
-
-        if (name == null) {
-            resp.setStatus(HttpServletResponse.SC_BAD_REQUEST);
-            resp.getWriter().println(mapper.writeValueAsString(new ErrorResponseDto("Name parameter not found")));
-            return;
-        }
-
         String sign = req.getParameter("sign");
 
-        if (sign == null) {
+        if (code == null || name == null || sign == null) {
             resp.setStatus(HttpServletResponse.SC_BAD_REQUEST);
-            resp.getWriter().println(mapper.writeValueAsString(new ErrorResponseDto("Sign parameter not found")));
+            resp.getWriter().println(mapper.writeValueAsString(new ErrorResponseDto("Missing parameters")));
             return;
         }
 

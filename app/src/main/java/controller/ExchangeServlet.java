@@ -1,7 +1,6 @@
 package controller;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.fasterxml.jackson.databind.node.ObjectNode;
 import dto.ExchangeDto;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.annotation.WebServlet;
@@ -13,6 +12,7 @@ import dto.ErrorResponseDto;
 import model.ExchangeRate;
 
 import dao.ExchangeRatesDao;
+import util.ParamValidator;
 
 import javax.sql.DataSource;
 
@@ -41,11 +41,7 @@ public class ExchangeServlet extends HttpServlet {
         String to = req.getParameter("to");
         String amountStr = req.getParameter("amount");
 
-        if (from == null || to == null || amountStr == null) {
-            resp.setStatus(HttpServletResponse.SC_BAD_REQUEST);
-            resp.getWriter().println(mapper.writeValueAsString(new ErrorResponseDto("Missing parameters")));
-            return;
-        }
+        ParamValidator.validateNotNull(from, to, amountStr);
         BigDecimal amount = new BigDecimal(amountStr);
 
         try {

@@ -48,12 +48,13 @@ public class CurrencyByCodeServlet extends HttpServlet {
         try {
             Currency currency = currencyDao.getCurrencyByCode(code);
 
-            if (currency != null) {
-                resp.getWriter().println(mapper.writeValueAsString(currency));
-            } else {
+            if (currency == null) {
                 resp.setStatus(HttpServletResponse.SC_NOT_FOUND);
                 resp.getWriter().println(mapper.writeValueAsString(new ErrorResponseDto("Currency not found")));
+                return;
             }
+
+            resp.getWriter().println(mapper.writeValueAsString(currency));
         } catch (SQLException e) {
             resp.setStatus(HttpServletResponse.SC_INTERNAL_SERVER_ERROR);
             resp.getWriter().println(mapper.writeValueAsString(new ErrorResponseDto("Database error")));

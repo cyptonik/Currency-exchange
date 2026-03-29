@@ -42,7 +42,6 @@ public class ExchangeRatesServlet extends HttpServlet {
         try {
             List<ExchangeRate> er = erDao.getAllExchangeRates();
             String json = mapper.writeValueAsString(er);
-
             resp.getWriter().println(json);
         } catch (SQLException e) {
             resp.setStatus(HttpServletResponse.SC_INTERNAL_SERVER_ERROR);
@@ -54,26 +53,12 @@ public class ExchangeRatesServlet extends HttpServlet {
     protected void doPost(HttpServletRequest req, HttpServletResponse resp) throws ServletException, IOException {
         resp.setContentType("application/json");
         String code1 = req.getParameter("baseCurrencyCode");
-
-        if (code1 == null) {
-            resp.setStatus(HttpServletResponse.SC_BAD_REQUEST);
-            resp.getWriter().println(mapper.writeValueAsString(new ErrorResponseDto("baseCurrencyCode parameter not found")));
-            return;
-        }
-
         String code2 = req.getParameter("targetCurrencyCode");
-
-        if (code2 == null) {
-            resp.setStatus(HttpServletResponse.SC_BAD_REQUEST);
-            resp.getWriter().println(mapper.writeValueAsString(new ErrorResponseDto("targetCurrencyCode parameter not found")));
-            return;
-        }
-
         String rateParam = req.getParameter("rate");
 
-        if (rateParam == null) {
+        if (code1 == null || code2 == null || rateParam == null) {
             resp.setStatus(HttpServletResponse.SC_BAD_REQUEST);
-            resp.getWriter().println(mapper.writeValueAsString(new ErrorResponseDto("rate parameter not found")));
+            resp.getWriter().println(mapper.writeValueAsString(new ErrorResponseDto("Missing parameters")));
             return;
         }
 

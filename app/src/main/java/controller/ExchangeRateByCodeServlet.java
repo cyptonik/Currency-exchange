@@ -53,7 +53,6 @@ public class ExchangeRateByCodeServlet extends HttpServlet {
             return;
         }
 
-
         String code = pathInfo.substring(1);
 
         if (code.length() != 6) {
@@ -65,12 +64,13 @@ public class ExchangeRateByCodeServlet extends HttpServlet {
         try {
             ExchangeRate er = erDao.getExchangeRateByCode(code);
 
-            if (er != null) {
-                resp.getWriter().println(mapper.writeValueAsString(er));
-            } else {
+            if (er == null) {
                 resp.setStatus(HttpServletResponse.SC_NOT_FOUND);
                 resp.getWriter().println(mapper.writeValueAsString(new ErrorResponseDto("Currency not found")));
+                return;
             }
+
+            resp.getWriter().println(mapper.writeValueAsString(er));
         } catch (SQLException e) {
             resp.setStatus(HttpServletResponse.SC_INTERNAL_SERVER_ERROR);
             resp.getWriter().println(mapper.writeValueAsString(new ErrorResponseDto("Database error")));

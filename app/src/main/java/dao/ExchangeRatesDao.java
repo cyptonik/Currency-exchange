@@ -1,5 +1,6 @@
 package dao;
 
+import exception.ExchangeRateNotFoundException;
 import model.ExchangeRate;
 import model.Currency;
 
@@ -50,8 +51,7 @@ public class ExchangeRatesDao {
         return exchangeRates;
     }
 
-    public ExchangeRate getExchangeRateByCode(String code) throws SQLException {
-        ExchangeRate exchangeRate = null;
+    public ExchangeRate getExchangeRateByCode(String code) throws SQLException, ExchangeRateNotFoundException{
         String query =
                 "SELECT er.id AS id, " +
                         "c1.id AS base_id, c1.code AS base_code, c1.fullname AS base_fullname, c1.sign AS base_sign, " +
@@ -69,26 +69,27 @@ public class ExchangeRatesDao {
             ps.setString(2, code.substring(3, 6));
 
             try (ResultSet rs = ps.executeQuery()) {
-                if (rs.next()) {
-                    Currency c1 = new Currency(
-                            rs.getInt("base_id"),
-                            rs.getString("base_code"),
-                            rs.getString("base_fullname"),
-                            rs.getString("base_sign")
-                    );
-
-                    Currency c2 = new Currency(
-                            rs.getInt("target_id"),
-                            rs.getString("target_code"),
-                            rs.getString("target_fullname"),
-                            rs.getString("target_sign")
-                    );
-
-                    exchangeRate = new ExchangeRate(rs.getInt("id"), c1, c2, rs.getBigDecimal("rate"));
+                if (!rs.next()) {
+                    throw new ExchangeRateNotFoundException();
                 }
+
+                Currency c1 = new Currency(
+                        rs.getInt("base_id"),
+                        rs.getString("base_code"),
+                        rs.getString("base_fullname"),
+                        rs.getString("base_sign")
+                );
+
+                Currency c2 = new Currency(
+                        rs.getInt("target_id"),
+                        rs.getString("target_code"),
+                        rs.getString("target_fullname"),
+                        rs.getString("target_sign")
+                );
+
+                return new ExchangeRate(rs.getInt("id"), c1, c2, rs.getBigDecimal("rate"));
             }
         }
-        return exchangeRate;
     }
 
     public boolean addExchangeRate(int baseCurrencyId, int targetCurrencyId, BigDecimal rate) throws SQLException {
