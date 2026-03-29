@@ -10,6 +10,7 @@ import jakarta.servlet.http.HttpServletResponse;
 import model.Currency;
 
 import dao.CurrencyDao;
+import model.ErrorResponseDto;
 
 import javax.sql.DataSource;
 
@@ -45,20 +46,51 @@ public class CurrenciesServlet extends HttpServlet {
     @Override
     protected void doPost(HttpServletRequest req, HttpServletResponse resp) throws ServletException, IOException {
         String code = req.getParameter("code");
+
+        if (code == null) {
+            resp.setStatus(HttpServletResponse.SC_BAD_REQUEST);
+            resp.setContentType("application/json");
+            resp.getWriter().println(mapper.writeValueAsString(new ErrorResponseDto("Code parameter not found")));
+            return;
+        }
+
         String name = req.getParameter("name");
+
+        if (name == null) {
+            resp.setStatus(HttpServletResponse.SC_BAD_REQUEST);
+            resp.setContentType("application/json");
+            resp.getWriter().println(mapper.writeValueAsString(new ErrorResponseDto("Name parameter not found")));
+            return;
+        }
+
         String sign = req.getParameter("sign");
+
+        if (sign == null) {
+            resp.setStatus(HttpServletResponse.SC_BAD_REQUEST);
+            resp.setContentType("application/json");
+            resp.getWriter().println(mapper.writeValueAsString(new ErrorResponseDto("Sign parameter not found")));
+            return;
+        }
 
         try {
             boolean rowsWereRead = currencyDao.addCurrency(code, name, sign);
 
             if (rowsWereRead) {
+                resp.setStatus(HttpServletResponse.SC_CREATED);
                 resp.setContentType("application/json");
                 resp.getWriter().println(mapper.writeValueAsString(currencyDao.getCurrencyByCode(code)));
-            } else {
-                resp.sendError(HttpServletResponse.SC_NOT_FOUND, "Exchange rate not found");
             }
         } catch(SQLException e) {
-            throw new RuntimeException(e);
+            String sqlState = e.getSQLState();
+            if (sqlState != null && sqlState.startsWith("23")) {
+                resp.setStatus(HttpServletResponse.SC_CONFLICT);
+                resp.setContentType("application/json");
+                resp.getWriter().println(mapper.writeValueAsString(new ErrorResponseDto("Currency with this code already exists")));
+            } else {
+                resp.setStatus(HttpServletResponse.SC_INTERNAL_SERVER_ERROR);
+                resp.setContentType("application/json");
+                resp.getWriter().println(mapper.writeValueAsString(new ErrorResponseDto("Database error")));
+            }
         }
     }
 }
