@@ -34,48 +34,60 @@ public class ExchangeService {
 
         return convertFromDirect(from, to, amount)
                 .orElseGet(() -> convertFromInverse(currencyFrom, currencyTo, amount)
-                        .orElseGet(() -> convertFromInverse(currencyFrom, currencyTo, amount)
+                        .orElseGet(() -> convertFromUsd(currencyFrom, currencyTo, amount)
                                 .orElseThrow(() -> new NotFoundException("Couldn't find exchange rates"))));
 
     }
 
     private Optional<ExchangeDto> convertFromDirect(String from, String to, BigDecimal amount) {
-        ExchangeRate exchangeRate = erDao.getExchangeRateByCode(from + to);
-        return Optional.of(new ExchangeDto(
-                exchangeRate.getBaseCurrency(),
-                exchangeRate.getTargetCurrency(),
-                exchangeRate.getRate(),
-                amount,
-                amount.multiply(exchangeRate.getRate()))
-        );
+        try {
+            ExchangeRate exchangeRate = erDao.getExchangeRateByCode(from + to);
+            return Optional.of(new ExchangeDto(
+                    exchangeRate.getBaseCurrency(),
+                    exchangeRate.getTargetCurrency(),
+                    exchangeRate.getRate(),
+                    amount,
+                    amount.multiply(exchangeRate.getRate()))
+            );
+        } catch (NotFoundException e) {
+            return Optional.empty();
+        }
     }
 
     private Optional<ExchangeDto> convertFromInverse(Currency currencyFrom, Currency currencyTo, BigDecimal amount) {
-        ExchangeRate inverseExchangeRate = erDao.getExchangeRateByCode(currencyTo.getCode() + currencyFrom.getCode());
-        BigDecimal rate = BigDecimal.ONE.divide(inverseExchangeRate.getRate(), 10, roundingMode);
+        try {
+            ExchangeRate inverseExchangeRate = erDao.getExchangeRateByCode(currencyTo.getCode() + currencyFrom.getCode());
+            BigDecimal rate = BigDecimal.ONE.divide(inverseExchangeRate.getRate(), 10, roundingMode);
 
-        return Optional.of(new ExchangeDto(
-                currencyFrom,
-                currencyTo,
-                rate,
-                amount,
-                amount.multiply(rate))
-        );
+            return Optional.of(new ExchangeDto(
+                    currencyFrom,
+                    currencyTo,
+                    rate,
+                    amount,
+                    amount.multiply(rate))
+            );
+        } catch (NotFoundException e) {
+            return Optional.empty();
+        }
     }
 
     private Optional<ExchangeDto> convertFromUsd(Currency currencyFrom, Currency currencyTo, BigDecimal amount) {
-        BigDecimal usdToFromRate = getUsdRate(currencyFrom);
-        BigDecimal usdToToRate = getUsdRate(currencyTo);
+        try {
+            BigDecimal usdToFromRate = getUsdRate(currencyFrom);
+            BigDecimal usdToToRate = getUsdRate(currencyTo);
 
-        BigDecimal rate = usdToToRate.divide(usdToFromRate, 10, roundingMode);
+            BigDecimal rate = usdToToRate.divide(usdToFromRate, 10, roundingMode);
 
-        return Optional.of(new ExchangeDto(
-                currencyFrom,
-                currencyTo,
-                rate,
-                amount,
-                amount.multiply(rate)
-        ));
+            return Optional.of(new ExchangeDto(
+                    currencyFrom,
+                    currencyTo,
+                    rate,
+                    amount,
+                    amount.multiply(rate)
+            ));
+        } catch (NotFoundException e) {
+            return Optional.empty();
+        }
     }
 
     private BigDecimal getUsdRate(Currency currency) {
