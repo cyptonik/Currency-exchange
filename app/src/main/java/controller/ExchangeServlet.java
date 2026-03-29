@@ -8,6 +8,7 @@ import jakarta.servlet.http.HttpServlet;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 
+import dto.ErrorResponseDto;
 import model.ExchangeRate;
 
 import dao.ExchangeRatesDao;
@@ -40,6 +41,7 @@ public class ExchangeServlet extends HttpServlet {
         try {
             ExchangeRate exchangeRate = erDao.getExchangeRateByCode(from + to);
             if (exchangeRate != null) {
+                // TODO: DTO надо
                 ObjectNode node = mapper.valueToTree(exchangeRate);
                 node.remove("id");
                 node.put("amount", amount);
@@ -48,10 +50,14 @@ public class ExchangeServlet extends HttpServlet {
                 resp.setContentType("application/json");
                 resp.getWriter().println(mapper.writeValueAsString(node));
             } else {
-                resp.sendError(HttpServletResponse.SC_NOT_FOUND, "Exchange parameters are invalid");
+                resp.setStatus(HttpServletResponse.SC_INTERNAL_SERVER_ERROR);
+                resp.setContentType("application/json");
+                resp.getWriter().println(mapper.writeValueAsString(new ErrorResponseDto("Database error")));
             }
         } catch(SQLException e) {
-            throw new RuntimeException(e);
+            resp.setStatus(HttpServletResponse.SC_INTERNAL_SERVER_ERROR);
+            resp.setContentType("application/json");
+            resp.getWriter().println(mapper.writeValueAsString(new ErrorResponseDto("Database error")));
         }
     }
 }

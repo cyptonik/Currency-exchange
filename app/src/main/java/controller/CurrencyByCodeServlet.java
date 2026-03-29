@@ -8,7 +8,7 @@ import jakarta.servlet.http.HttpServlet;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import model.Currency;
-import model.ErrorResponseDto;
+import dto.ErrorResponseDto;
 
 import javax.sql.DataSource;
 import java.io.IOException;
@@ -28,31 +28,34 @@ public class CurrencyByCodeServlet extends HttpServlet {
 
     @Override
     protected void doGet(HttpServletRequest req, HttpServletResponse resp) throws ServletException, IOException {
+        resp.setContentType("application/json");
         String pathInfo = req.getPathInfo();
 
         if (pathInfo == null || pathInfo.equals("/")) {
             resp.setStatus(HttpServletResponse.SC_BAD_REQUEST);
-            resp.setContentType("application/json");
             resp.getWriter().println(mapper.writeValueAsString(new ErrorResponseDto("Code not found")));
             return;
         }
 
         String code = pathInfo.substring(1);
 
+        if (code.length() != 3) {
+            resp.setStatus(HttpServletResponse.SC_BAD_REQUEST);
+            resp.getWriter().println(mapper.writeValueAsString(new ErrorResponseDto("Incorrect currency")));
+            return;
+        }
+
         try {
             Currency currency = currencyDao.getCurrencyByCode(code);
 
             if (currency != null) {
-                resp.setContentType("application/json");
                 resp.getWriter().println(mapper.writeValueAsString(currency));
             } else {
                 resp.setStatus(HttpServletResponse.SC_NOT_FOUND);
-                resp.setContentType("application/json");
                 resp.getWriter().println(mapper.writeValueAsString(new ErrorResponseDto("Currency not found")));
             }
         } catch (SQLException e) {
             resp.setStatus(HttpServletResponse.SC_INTERNAL_SERVER_ERROR);
-            resp.setContentType("application/json");
             resp.getWriter().println(mapper.writeValueAsString(new ErrorResponseDto("Database error")));
         }
     }

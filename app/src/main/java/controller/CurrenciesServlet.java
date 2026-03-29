@@ -10,7 +10,7 @@ import jakarta.servlet.http.HttpServletResponse;
 import model.Currency;
 
 import dao.CurrencyDao;
-import model.ErrorResponseDto;
+import dto.ErrorResponseDto;
 
 import javax.sql.DataSource;
 
@@ -32,26 +32,25 @@ public class CurrenciesServlet extends HttpServlet {
 
     @Override
     protected void doGet(HttpServletRequest req, HttpServletResponse resp) throws ServletException, IOException {
+        resp.setContentType("application/json");
         try {
             List<Currency> currencies = currencyDao.getAllCurrencies();
             String json = mapper.writeValueAsString(currencies);
 
-            resp.setContentType("application/json");
             resp.getWriter().println(json);
         } catch (SQLException e) {
             resp.setStatus(HttpServletResponse.SC_INTERNAL_SERVER_ERROR);
-            resp.setContentType("application/json");
             resp.getWriter().println(mapper.writeValueAsString(new ErrorResponseDto("Database error")));
         }
     }
 
     @Override
     protected void doPost(HttpServletRequest req, HttpServletResponse resp) throws ServletException, IOException {
+        resp.setContentType("application/json");
         String code = req.getParameter("code");
 
         if (code == null) {
             resp.setStatus(HttpServletResponse.SC_BAD_REQUEST);
-            resp.setContentType("application/json");
             resp.getWriter().println(mapper.writeValueAsString(new ErrorResponseDto("Code parameter not found")));
             return;
         }
@@ -60,7 +59,6 @@ public class CurrenciesServlet extends HttpServlet {
 
         if (name == null) {
             resp.setStatus(HttpServletResponse.SC_BAD_REQUEST);
-            resp.setContentType("application/json");
             resp.getWriter().println(mapper.writeValueAsString(new ErrorResponseDto("Name parameter not found")));
             return;
         }
@@ -69,28 +67,22 @@ public class CurrenciesServlet extends HttpServlet {
 
         if (sign == null) {
             resp.setStatus(HttpServletResponse.SC_BAD_REQUEST);
-            resp.setContentType("application/json");
             resp.getWriter().println(mapper.writeValueAsString(new ErrorResponseDto("Sign parameter not found")));
             return;
         }
 
         try {
-            boolean rowsWereRead = currencyDao.addCurrency(code, name, sign);
+            currencyDao.addCurrency(code, name, sign);
 
-            if (rowsWereRead) {
-                resp.setStatus(HttpServletResponse.SC_CREATED);
-                resp.setContentType("application/json");
-                resp.getWriter().println(mapper.writeValueAsString(currencyDao.getCurrencyByCode(code)));
-            }
+            resp.setStatus(HttpServletResponse.SC_CREATED);
+            resp.getWriter().println(mapper.writeValueAsString(currencyDao.getCurrencyByCode(code)));
         } catch(SQLException e) {
             String sqlState = e.getSQLState();
             if (sqlState != null && sqlState.startsWith("23")) {
                 resp.setStatus(HttpServletResponse.SC_CONFLICT);
-                resp.setContentType("application/json");
                 resp.getWriter().println(mapper.writeValueAsString(new ErrorResponseDto("Currency with this code already exists")));
             } else {
                 resp.setStatus(HttpServletResponse.SC_INTERNAL_SERVER_ERROR);
-                resp.setContentType("application/json");
                 resp.getWriter().println(mapper.writeValueAsString(new ErrorResponseDto("Database error")));
             }
         }

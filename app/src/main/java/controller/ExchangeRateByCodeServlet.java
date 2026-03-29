@@ -7,6 +7,7 @@ import jakarta.servlet.http.HttpServlet;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 
+import dto.ErrorResponseDto;
 import model.ExchangeRate;
 import dao.ExchangeRatesDao;
 
@@ -43,10 +44,12 @@ public class ExchangeRateByCodeServlet extends HttpServlet {
 
     @Override
     protected void doGet(HttpServletRequest req, HttpServletResponse resp) throws ServletException, IOException {
+        resp.setContentType("application/json");
         String pathInfo = req.getPathInfo();
 
         if (pathInfo == null || pathInfo.equals("/")) {
-            resp.sendError(HttpServletResponse.SC_BAD_REQUEST, "Code is missing");
+            resp.setStatus(HttpServletResponse.SC_BAD_REQUEST);
+            resp.getWriter().println(mapper.writeValueAsString(new ErrorResponseDto("Code not found")));
             return;
         }
 
@@ -54,33 +57,41 @@ public class ExchangeRateByCodeServlet extends HttpServlet {
         String code = pathInfo.substring(1);
 
         if (code.length() != 6) {
-            resp.sendError(HttpServletResponse.SC_BAD_REQUEST, "Invalid currency pair code");
+            resp.setStatus(HttpServletResponse.SC_BAD_REQUEST);
+            resp.getWriter().println(mapper.writeValueAsString(new ErrorResponseDto("Incorrect currency pair")));
             return;
         }
 
         try {
             ExchangeRate er = erDao.getExchangeRateByCode(code);
-            String json = mapper.writeValueAsString(er);
 
-            resp.setContentType("application/json");
-            resp.getWriter().println(json);
+            if (er != null) {
+                resp.getWriter().println(mapper.writeValueAsString(er));
+            } else {
+                resp.setStatus(HttpServletResponse.SC_NOT_FOUND);
+                resp.getWriter().println(mapper.writeValueAsString(new ErrorResponseDto("Currency not found")));
+            }
         } catch (SQLException e) {
-            throw new RuntimeException(e);
+            resp.setStatus(HttpServletResponse.SC_INTERNAL_SERVER_ERROR);
+            resp.getWriter().println(mapper.writeValueAsString(new ErrorResponseDto("Database error")));
         }
     }
 
     protected void doPatch(HttpServletRequest req, HttpServletResponse resp) throws ServletException, IOException {
+        resp.setContentType("application/json");
         String pathInfo = req.getPathInfo();
 
         if (pathInfo == null || pathInfo.equals("/")) {
-            resp.sendError(HttpServletResponse.SC_BAD_REQUEST, "Code is missing");
+            resp.setStatus(HttpServletResponse.SC_BAD_REQUEST);
+            resp.getWriter().println(mapper.writeValueAsString(new ErrorResponseDto("Code not found")));
             return;
         }
 
         String code = pathInfo.substring(1);
 
         if (code.length() != 6) {
-            resp.sendError(HttpServletResponse.SC_BAD_REQUEST, "Invalid currency pair code");
+            resp.setStatus(HttpServletResponse.SC_BAD_REQUEST);
+            resp.getWriter().println(mapper.writeValueAsString(new ErrorResponseDto("Incorrect currency pair")));
             return;
         }
 
@@ -91,22 +102,28 @@ public class ExchangeRateByCodeServlet extends HttpServlet {
                                             .findFirst()
                                             .orElseThrow(() -> new RuntimeException("rate missing"))
         );
+
+        if (rateStr.isEmpty()) {
+            resp.setStatus(HttpServletResponse.SC_BAD_REQUEST);
+            resp.getWriter().println(mapper.writeValueAsString(new ErrorResponseDto("rate parameter not found")));
+            return;
+        }
+
         BigDecimal newRate = new BigDecimal(rateStr);
 
         try {
             ExchangeRate er = erDao.getExchangeRateByCode(code);
+            if (er == null) {
+                resp.setStatus(HttpServletResponse.SC_NOT_FOUND);
+                resp.getWriter().println(mapper.writeValueAsString(new ErrorResponseDto("One of the pairs is not present in the database")));
+            }
             er.setRate(newRate);
 
-            boolean rowsWereRead = erDao.updateExchangeRate(er.getBaseCurrency().getId(), er.getTargetCurrency().getId(), newRate);
-
-            if (rowsWereRead) {
-                resp.setContentType("application/json");
-                resp.getWriter().println(mapper.writeValueAsString(er));
-            } else {
-                resp.sendError(HttpServletResponse.SC_NOT_FOUND, "Exchange rate not found");
-            }
+            erDao.updateExchangeRate(er.getBaseCurrency().getId(), er.getTargetCurrency().getId(), newRate);
+            resp.getWriter().println(mapper.writeValueAsString(er));
         } catch (SQLException e) {
-            throw new RuntimeException(e);
+            resp.setStatus(HttpServletResponse.SC_INTERNAL_SERVER_ERROR);
+            resp.getWriter().println(mapper.writeValueAsString(new ErrorResponseDto("Database error")));
         }
     }
 }

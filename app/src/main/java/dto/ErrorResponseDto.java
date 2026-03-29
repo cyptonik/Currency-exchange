@@ -1,4 +1,4 @@
-package model;
+package dto;
 
 public class ErrorResponseDto {
     private String message;
