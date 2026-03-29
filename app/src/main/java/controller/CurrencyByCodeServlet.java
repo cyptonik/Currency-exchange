@@ -8,6 +8,7 @@ import jakarta.servlet.http.HttpServlet;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import model.Currency;
+import model.ErrorResponseDto;
 
 import javax.sql.DataSource;
 import java.io.IOException;
@@ -30,19 +31,25 @@ public class CurrencyByCodeServlet extends HttpServlet {
         String pathInfo = req.getPathInfo();
 
         if (pathInfo == null || pathInfo.equals("/")) {
-            resp.sendError(HttpServletResponse.SC_BAD_REQUEST, "Code is missing");
+            resp.setStatus(HttpServletResponse.SC_BAD_REQUEST);
+            resp.setContentType("application/json");
+            resp.getWriter().println(mapper.writeValueAsString(new ErrorResponseDto("Code not found")));
             return;
         }
 
         String code = pathInfo.substring(1);
 
         try {
-            Currency record = currencyDao.getCurrencyByCode(code);
-            String json = mapper.writeValueAsString(record);
+            Currency currency = currencyDao.getCurrencyByCode(code);
 
-            resp.setContentType("application/json");
-            resp.setCharacterEncoding("UTF-8");
-            mapper.writeValue(resp.getOutputStream(), record);
+            if (currency != null) {
+                resp.setContentType("application/json");
+                resp.getWriter().println(mapper.writeValueAsString(currency));
+            } else {
+                resp.setStatus(HttpServletResponse.SC_NOT_FOUND);
+                resp.setContentType("application/json");
+                resp.getWriter().println(mapper.writeValueAsString(new ErrorResponseDto("Currency not found")));
+            }
         } catch (SQLException e) {
             throw new RuntimeException(e);
         }
