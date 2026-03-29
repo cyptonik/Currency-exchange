@@ -20,17 +20,15 @@ import java.math.BigDecimal;
 
 @WebServlet("/exchange")
 public class ExchangeServlet extends HttpServlet {
-    private ExchangeRatesDao erDao;
-    private CurrencyDao currencyDao;
     private ObjectMapper mapper;
+    private ExchangeService exchangeService;
 
     @Override
     public void init() throws ServletException {
         DataSource ds = (DataSource) getServletContext().getAttribute("dataSource");
 
-        this.erDao = new ExchangeRatesDao(ds);
-        this.currencyDao = new CurrencyDao(ds);
         this.mapper = new ObjectMapper();
+        this.exchangeService = new ExchangeService(new ExchangeRatesDao(ds), new CurrencyDao(ds));
     }
 
     @Override
@@ -44,7 +42,7 @@ public class ExchangeServlet extends HttpServlet {
         ParamValidator.validateNotNull(from, to, amountStr);
         BigDecimal amount = new BigDecimal(amountStr);
 
-        ExchangeDto exchangeDto = (new ExchangeService(erDao, currencyDao)).convert(from, to, amount);
+        ExchangeDto exchangeDto = exchangeService.convert(from, to, amount);
         resp.getWriter().println(mapper.writeValueAsString(exchangeDto));
     }
 }
