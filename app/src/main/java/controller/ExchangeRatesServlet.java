@@ -8,17 +8,16 @@ import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 
 import model.Currency;
-import dto.ErrorResponseDto;
 import model.ExchangeRate;
 
 import dao.ExchangeRatesDao;
 import dao.CurrencyDao;
+import util.ParamValidator;
 
 import javax.sql.DataSource;
 
 import java.io.IOException;
 import java.math.BigDecimal;
-import java.sql.SQLException;
 import java.util.List;
 
 @WebServlet("/exchangeRates")
@@ -39,14 +38,9 @@ public class ExchangeRatesServlet extends HttpServlet {
     @Override
     protected void doGet(HttpServletRequest req, HttpServletResponse resp) throws ServletException, IOException {
         resp.setContentType("application/json");
-        try {
-            List<ExchangeRate> er = erDao.getAllExchangeRates();
-            String json = mapper.writeValueAsString(er);
-            resp.getWriter().println(json);
-        } catch (SQLException e) {
-            resp.setStatus(HttpServletResponse.SC_INTERNAL_SERVER_ERROR);
-            resp.getWriter().println(mapper.writeValueAsString(new ErrorResponseDto("Database error")));
-        }
+
+        List<ExchangeRate> er = erDao.getAllExchangeRates();
+        resp.getWriter().println(mapper.writeValueAsString(er));
     }
 
     @Override
@@ -56,36 +50,16 @@ public class ExchangeRatesServlet extends HttpServlet {
         String code2 = req.getParameter("targetCurrencyCode");
         String rateParam = req.getParameter("rate");
 
-        if (code1 == null || code2 == null || rateParam == null) {
-            resp.setStatus(HttpServletResponse.SC_BAD_REQUEST);
-            resp.getWriter().println(mapper.writeValueAsString(new ErrorResponseDto("Missing parameters")));
-            return;
-        }
+        ParamValidator.validateNotNull(code1, code2, rateParam);
 
         BigDecimal rate = new BigDecimal(rateParam);
 
-        try {
-            Currency c1 = currencyDao.getCurrencyByCode(code1);
-            Currency c2 = currencyDao.getCurrencyByCode(code2);
+        Currency c1 = currencyDao.getCurrencyByCode(code1);
+        Currency c2 = currencyDao.getCurrencyByCode(code2);
 
-            if (c1 == null || c2 == null) {
-                resp.setStatus(HttpServletResponse.SC_NOT_FOUND);
-                resp.getWriter().println(mapper.writeValueAsString(new ErrorResponseDto("One of the pairs is not present in the database")));
-                return;
-            }
+        erDao.addExchangeRate(c1.getId(), c2.getId(), rate);
 
-            erDao.addExchangeRate(c1.getId(), c2.getId(), rate);
-            resp.setStatus(HttpServletResponse.SC_CREATED);
-            resp.getWriter().println(mapper.writeValueAsString(new ExchangeRate(c1, c2, rate)));
-        } catch(SQLException e) {
-            String sqlState = e.getSQLState();
-            if (sqlState != null && sqlState.startsWith("23")) {
-                resp.setStatus(HttpServletResponse.SC_CONFLICT);
-                resp.getWriter().println(mapper.writeValueAsString(new ErrorResponseDto("Currency pair with these codes already exists")));
-            } else {
-                resp.setStatus(HttpServletResponse.SC_INTERNAL_SERVER_ERROR);
-                resp.getWriter().println(mapper.writeValueAsString(new ErrorResponseDto("Database error")));
-            }
-        }
+        resp.setStatus(HttpServletResponse.SC_CREATED);
+        resp.getWriter().println(mapper.writeValueAsString(new ExchangeRate(c1, c2, rate)));
     }
 }

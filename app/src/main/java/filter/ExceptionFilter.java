@@ -2,9 +2,7 @@ package filter;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import dto.ErrorResponseDto;
-import exception.DatabaseException;
-import exception.InvalidParametersException;
-import exception.CurrencyNotFoundException;
+import exception.*;
 import jakarta.servlet.*;
 import jakarta.servlet.annotation.WebFilter;
 import jakarta.servlet.http.HttpServletResponse;
@@ -27,8 +25,10 @@ public class ExceptionFilter implements Filter {
             chain.doFilter(req, resp);
         } catch (InvalidParametersException e) {
             sendError(httpResp, HttpServletResponse.SC_BAD_REQUEST, e.getMessage());
-        } catch (CurrencyNotFoundException e) {
+        } catch (NotFoundException e) {
             sendError(httpResp, HttpServletResponse.SC_NOT_FOUND, e.getMessage());
+        } catch (AlreadyExistsException e) {
+            sendError(httpResp, HttpServletResponse.SC_CONFLICT, e.getMessage());
         } catch (DatabaseException e) {
             sendError(httpResp, HttpServletResponse.SC_INTERNAL_SERVER_ERROR, e.getMessage());
         }

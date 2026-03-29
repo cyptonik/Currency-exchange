@@ -1,7 +1,8 @@
 package dao;
 
+import exception.AlreadyExistsException;
 import exception.DatabaseException;
-import exception.ExchangeRateNotFoundException;
+import exception.NotFoundException;
 import model.ExchangeRate;
 import model.Currency;
 
@@ -18,7 +19,7 @@ public class ExchangeRatesDao {
         this.dataSource = dataSource;
     }
 
-    public List<ExchangeRate> getAllExchangeRates() throws SQLException {
+    public List<ExchangeRate> getAllExchangeRates() {
         List<ExchangeRate> exchangeRates = new ArrayList<>();
         String query = "SELECT er.id, " +
                 "c1.id AS base_id, c1.code AS base_code, c1.fullname AS base_fullname, c1.sign AS base_sign, " +
@@ -34,7 +35,10 @@ public class ExchangeRatesDao {
             while (rs.next()) {
                 exchangeRates.add(mapRow(rs));
             }
+        } catch(SQLException e) {
+            throw new DatabaseException(e);
         }
+
         return exchangeRates;
     }
 
@@ -56,9 +60,7 @@ public class ExchangeRatesDao {
             ps.setString(2, code.substring(3, 6));
 
             try (ResultSet rs = ps.executeQuery()) {
-                if (!rs.next()) {
-                    throw new ExchangeRateNotFoundException();
-                }
+                if (!rs.next()) { throw new NotFoundException("Exchange rate with this code is not present in the database"); }
                 return mapRow(rs);
             }
         } catch (SQLException e) {
@@ -80,7 +82,12 @@ public class ExchangeRatesDao {
             int rows = ps.executeUpdate();
             return rows > 0;
         } catch(SQLException e) {
-            throw new DatabaseException(e);
+            String sqlState = e.getSQLState();
+            if (sqlState != null && sqlState.startsWith("23")) {
+                throw new AlreadyExistsException("Exchange rate with this pair already exists", e);
+            } else {
+                throw new DatabaseException(e);
+            }
         }
     }
 
