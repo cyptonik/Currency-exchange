@@ -39,7 +39,9 @@ public class CurrenciesServlet extends HttpServlet {
             resp.setContentType("application/json");
             resp.getWriter().println(json);
         } catch (SQLException e) {
-            throw new RuntimeException(e);
+            resp.setStatus(HttpServletResponse.SC_INTERNAL_SERVER_ERROR);
+            resp.setContentType("application/json");
+            resp.getWriter().println(mapper.writeValueAsString(new ErrorResponseDto("Database error")));
         }
     }
 
