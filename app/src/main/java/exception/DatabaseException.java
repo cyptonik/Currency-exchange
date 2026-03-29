@@ -5,7 +5,7 @@ public class DatabaseException extends RuntimeException{
         super("Database error");
     }
 
-    public DatabaseException(String message) {
-        super(message);
+    public DatabaseException(Throwable cause) {
+        super("Database error", cause);
     }
 }

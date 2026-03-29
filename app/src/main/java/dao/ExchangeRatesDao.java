@@ -1,5 +1,6 @@
 package dao;
 
+import exception.DatabaseException;
 import exception.ExchangeRateNotFoundException;
 import model.ExchangeRate;
 import model.Currency;
@@ -31,27 +32,13 @@ public class ExchangeRatesDao {
              Statement stmt = conn.createStatement();
              ResultSet rs = stmt.executeQuery(query)) {
             while (rs.next()) {
-                Currency c1 = new Currency(
-                        rs.getInt("base_id"),
-                        rs.getString("base_code"),
-                        rs.getString("base_fullname"),
-                        rs.getString("base_sign")
-                );
-
-                Currency c2 = new Currency(
-                        rs.getInt("target_id"),
-                        rs.getString("target_code"),
-                        rs.getString("target_fullname"),
-                        rs.getString("target_sign")
-                );
-                ExchangeRate er = new ExchangeRate(rs.getInt("id"), c1, c2, rs.getBigDecimal("rate"));
-                exchangeRates.add(er);
+                exchangeRates.add(mapRow(rs));
             }
         }
         return exchangeRates;
     }
 
-    public ExchangeRate getExchangeRateByCode(String code) throws SQLException, ExchangeRateNotFoundException{
+    public ExchangeRate getExchangeRateByCode(String code) {
         String query =
                 "SELECT er.id AS id, " +
                         "c1.id AS base_id, c1.code AS base_code, c1.fullname AS base_fullname, c1.sign AS base_sign, " +
@@ -72,23 +59,10 @@ public class ExchangeRatesDao {
                 if (!rs.next()) {
                     throw new ExchangeRateNotFoundException();
                 }
-
-                Currency c1 = new Currency(
-                        rs.getInt("base_id"),
-                        rs.getString("base_code"),
-                        rs.getString("base_fullname"),
-                        rs.getString("base_sign")
-                );
-
-                Currency c2 = new Currency(
-                        rs.getInt("target_id"),
-                        rs.getString("target_code"),
-                        rs.getString("target_fullname"),
-                        rs.getString("target_sign")
-                );
-
-                return new ExchangeRate(rs.getInt("id"), c1, c2, rs.getBigDecimal("rate"));
+                return mapRow(rs);
             }
+        } catch (SQLException e) {
+            throw new DatabaseException(e);
         }
     }
 
@@ -120,5 +94,21 @@ public class ExchangeRatesDao {
             int rows = ps.executeUpdate();
             return rows > 0;
         }
+    }
+
+    private ExchangeRate mapRow(ResultSet rs) throws SQLException {
+        Currency c1 = new Currency(
+                rs.getInt("base_id"),
+                rs.getString("base_code"),
+                rs.getString("base_fullname"),
+                rs.getString("base_sign")
+        );
+        Currency c2 = new Currency(
+                rs.getInt("target_id"),
+                rs.getString("target_code"),
+                rs.getString("target_fullname"),
+                rs.getString("target_sign")
+        );
+        return new ExchangeRate(rs.getInt("id"), c1, c2, rs.getBigDecimal("rate"));
     }
 }

@@ -44,25 +44,35 @@ public class ExchangeServlet extends HttpServlet {
         ParamValidator.validateNotNull(from, to, amountStr);
         BigDecimal amount = new BigDecimal(amountStr);
 
-        try {
-            // TODO: сделать перевод валют через существующие (см. задание)
-            ExchangeRate exchangeRate = erDao.getExchangeRateByCode(from + to);
-            if (exchangeRate != null) {
-                ExchangeDto exchangeDto = new ExchangeDto(
-                        exchangeRate.getBaseCurrency(),
-                        exchangeRate.getTargetCurrency(),
-                        exchangeRate.getRate(),
-                        amount,
-                        amount.multiply(exchangeRate.getRate()));
+        ExchangeRate exchangeRate = erDao.getExchangeRateByCode(from + to);
 
-                resp.getWriter().println(mapper.writeValueAsString(exchangeDto));
-            } else {
-                resp.setStatus(HttpServletResponse.SC_NOT_FOUND);
-                resp.getWriter().println(mapper.writeValueAsString(new ErrorResponseDto("Exchange rate is not present in the database")));
-            }
-        } catch(SQLException e) {
-            resp.setStatus(HttpServletResponse.SC_INTERNAL_SERVER_ERROR);
-            resp.getWriter().println(mapper.writeValueAsString(new ErrorResponseDto("Database error")));
-        }
+        ExchangeDto exchangeDto = new ExchangeDto(
+                exchangeRate.getBaseCurrency(),
+                exchangeRate.getTargetCurrency(),
+                exchangeRate.getRate(),
+                amount,
+                amount.multiply(exchangeRate.getRate()));
+
+        resp.getWriter().println(mapper.writeValueAsString(exchangeDto));
+//        try {
+//            // TODO: сделать перевод валют через существующие (см. задание)
+//            ExchangeRate exchangeRate = erDao.getExchangeRateByCode(from + to);
+//            if (exchangeRate != null) {
+//                ExchangeDto exchangeDto = new ExchangeDto(
+//                        exchangeRate.getBaseCurrency(),
+//                        exchangeRate.getTargetCurrency(),
+//                        exchangeRate.getRate(),
+//                        amount,
+//                        amount.multiply(exchangeRate.getRate()));
+//
+//                resp.getWriter().println(mapper.writeValueAsString(exchangeDto));
+//            } else {
+//                resp.setStatus(HttpServletResponse.SC_NOT_FOUND);
+//                resp.getWriter().println(mapper.writeValueAsString(new ErrorResponseDto("Exchange rate is not present in the database")));
+//            }
+//        } catch(SQLException e) {
+//            resp.setStatus(HttpServletResponse.SC_INTERNAL_SERVER_ERROR);
+//            resp.getWriter().println(mapper.writeValueAsString(new ErrorResponseDto("Database error")));
+//        }
     }
 }
