@@ -2,12 +2,13 @@ package controller;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import dao.CurrencyDao;
+import dto.CurrencyDto;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.annotation.WebServlet;
 import jakarta.servlet.http.HttpServlet;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
-import model.Currency;
+import util.MapperToDto;
 import util.ParamValidator;
 
 import javax.sql.DataSource;
@@ -35,7 +36,7 @@ public class CurrencyByCodeServlet extends HttpServlet {
         String code = pathInfo.substring(1);
         ParamValidator.validateCurrencyCode(code);
 
-        Currency currency = currencyDao.getCurrencyByCode(code);
-        resp.getWriter().println(mapper.writeValueAsString(currency));
+        CurrencyDto currencyDto = MapperToDto.mapCurrencyToDto(currencyDao.getCurrencyByCode(code));
+        resp.getWriter().println(mapper.writeValueAsString(currencyDto));
     }
 }

@@ -1,15 +1,15 @@
 package controller;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
+import dto.CurrencyDto;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.annotation.WebServlet;
 import jakarta.servlet.http.HttpServlet;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 
-import model.Currency;
-
 import dao.CurrencyDao;
+import util.MapperToDto;
 import util.ParamValidator;
 
 import javax.sql.DataSource;
@@ -33,8 +33,10 @@ public class CurrenciesServlet extends HttpServlet {
     protected void doGet(HttpServletRequest req, HttpServletResponse resp) throws ServletException, IOException {
         resp.setContentType("application/json");
 
-        List<Currency> currencies = currencyDao.getAllCurrencies();
-        resp.getWriter().println(mapper.writeValueAsString(currencies));
+        List<CurrencyDto> currencyDtos = currencyDao.getAllCurrencies().stream()
+                .map(MapperToDto::mapCurrencyToDto)
+                .toList();
+        resp.getWriter().println(mapper.writeValueAsString(currencyDtos));
     }
 
     @Override
@@ -46,9 +48,9 @@ public class CurrenciesServlet extends HttpServlet {
 
         ParamValidator.validateNotNull(code, name, sign);
 
-        currencyDao.addCurrency(code, name, sign);
+        CurrencyDto newCurrencyDto = MapperToDto.mapCurrencyToDto(currencyDao.addCurrency(code, name, sign));
 
         resp.setStatus(HttpServletResponse.SC_CREATED);
-        resp.getWriter().println(mapper.writeValueAsString(currencyDao.getCurrencyByCode(code)));
+        resp.getWriter().println(mapper.writeValueAsString(newCurrencyDto));
     }
 }
