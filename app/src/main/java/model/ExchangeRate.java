@@ -14,14 +14,14 @@ public class ExchangeRate {
     public ExchangeRate(Currency baseCurrency, Currency targetCurrency, BigDecimal rate) {
         this.baseCurrency = baseCurrency;
         this.targetCurrency = targetCurrency;
-        this.rate = rate.setScale(2, RoundingMode.HALF_UP);
+        this.rate = rate;
     }
 
     public ExchangeRate(int id, Currency baseCurrency, Currency targetCurrency, BigDecimal rate) {
         this.id = id;
         this.baseCurrency = baseCurrency;
         this.targetCurrency = targetCurrency;
-        this.rate = rate.setScale(2, RoundingMode.HALF_UP);
+        this.rate = rate;
     }
 
     public int getId() {
@@ -41,8 +41,8 @@ public class ExchangeRate {
     }
 
     public void setRate(BigDecimal rate) {
-        if (rate.compareTo(new BigDecimal("0")) > 0) {
-            this.rate = rate.setScale(2, RoundingMode.HALF_UP);
+        if (rate.compareTo(BigDecimal.ZERO) > 0) {
+            this.rate = rate;
         }
     }
 }
