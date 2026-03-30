@@ -4,7 +4,6 @@ import exception.AlreadyExistsException;
 import exception.DatabaseException;
 import exception.NotFoundException;
 import model.Currency;
-import model.ExchangeRate;
 
 import javax.sql.DataSource;
 import java.sql.*;

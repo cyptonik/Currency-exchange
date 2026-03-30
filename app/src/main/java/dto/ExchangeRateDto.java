@@ -1,7 +1,5 @@
 package dto;
 
-import model.Currency;
-
 import java.math.BigDecimal;
 import java.math.RoundingMode;
 
