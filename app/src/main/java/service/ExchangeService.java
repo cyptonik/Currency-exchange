@@ -6,6 +6,7 @@ import dto.ExchangeDto;
 import exception.NotFoundException;
 import model.Currency;
 import model.ExchangeRate;
+import util.MapperToDto;
 
 import java.math.BigDecimal;
 import java.math.RoundingMode;
@@ -41,12 +42,12 @@ public class ExchangeService {
         try {
             ExchangeRate exchangeRate = erDao.getExchangeRateByCode(from + to);
             return Optional.of(new ExchangeDto(
-                    exchangeRate.getBaseCurrency(),
-                    exchangeRate.getTargetCurrency(),
+                    MapperToDto.mapCurrencyToDto(exchangeRate.getBaseCurrency()),
+                    MapperToDto.mapCurrencyToDto(exchangeRate.getTargetCurrency()),
                     exchangeRate.getRate(),
                     amount,
-                    amount.multiply(exchangeRate.getRate()))
-            );
+                    amount.multiply(exchangeRate.getRate())
+            ));
         } catch (NotFoundException e) {
             return Optional.empty();
         }
@@ -58,8 +59,8 @@ public class ExchangeService {
             BigDecimal rate = BigDecimal.ONE.divide(inverseExchangeRate.getRate(), 10, roundingMode);
 
             return Optional.of(new ExchangeDto(
-                    currencyFrom,
-                    currencyTo,
+                    MapperToDto.mapCurrencyToDto(currencyFrom),
+                    MapperToDto.mapCurrencyToDto(currencyTo),
                     rate,
                     amount,
                     amount.multiply(rate))
@@ -77,8 +78,8 @@ public class ExchangeService {
             BigDecimal rate = usdToToRate.divide(usdToFromRate, 10, roundingMode);
 
             return Optional.of(new ExchangeDto(
-                    currencyFrom,
-                    currencyTo,
+                    MapperToDto.mapCurrencyToDto(currencyFrom),
+                    MapperToDto.mapCurrencyToDto(currencyTo),
                     rate,
                     amount,
                     amount.multiply(rate)

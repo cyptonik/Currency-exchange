@@ -6,25 +6,25 @@ import java.math.BigDecimal;
 import java.math.RoundingMode;
 
 public class ExchangeDto {
-    private Currency baseCurrency;
-    private Currency targetCurrency;
-    private BigDecimal rate;
-    private BigDecimal amount;
-    private BigDecimal convertedAmount;
+    private final CurrencyDto baseCurrency;
+    private final CurrencyDto targetCurrency;
+    private final BigDecimal rate;
+    private final BigDecimal amount;
+    private final BigDecimal convertedAmount;
 
-    public ExchangeDto(Currency baseCurrency, Currency targetCurrency, BigDecimal rate, BigDecimal amount, BigDecimal convertedAmount) {
+    public ExchangeDto(CurrencyDto baseCurrency, CurrencyDto targetCurrency, BigDecimal rate, BigDecimal amount, BigDecimal convertedAmount) {
         this.baseCurrency = baseCurrency;
         this.targetCurrency = targetCurrency;
-        this.rate = rate.setScale(2, RoundingMode.HALF_UP);
-        this.amount = amount.setScale(2, RoundingMode.HALF_UP);
-        this.convertedAmount = convertedAmount.setScale(2, RoundingMode.HALF_UP);
+        this.rate = rate.setScale(2, RoundingMode.HALF_EVEN);
+        this.amount = amount.setScale(2, RoundingMode.HALF_EVEN);
+        this.convertedAmount = convertedAmount.setScale(2, RoundingMode.HALF_EVEN);
     }
 
-    public Currency getBaseCurrency() {
+    public CurrencyDto getBaseCurrency() {
         return baseCurrency;
     }
 
-    public Currency getTargetCurrency() {
+    public CurrencyDto getTargetCurrency() {
         return targetCurrency;
     }
 
