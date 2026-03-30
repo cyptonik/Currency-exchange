@@ -1,6 +1,7 @@
 package controller;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
+import dto.ExchangeRateDto;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.annotation.WebServlet;
 import jakarta.servlet.http.HttpServlet;
@@ -8,10 +9,10 @@ import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 
 import model.Currency;
-import model.ExchangeRate;
 
 import dao.ExchangeRatesDao;
 import dao.CurrencyDao;
+import util.MapperToDto;
 import util.ParamValidator;
 
 import javax.sql.DataSource;
@@ -39,8 +40,10 @@ public class ExchangeRatesServlet extends HttpServlet {
     protected void doGet(HttpServletRequest req, HttpServletResponse resp) throws ServletException, IOException {
         resp.setContentType("application/json");
 
-        List<ExchangeRate> er = erDao.getAllExchangeRates();
-        resp.getWriter().println(mapper.writeValueAsString(er));
+        List<ExchangeRateDto> exchangeRateDtos = erDao.getAllExchangeRates().stream()
+                .map(MapperToDto::mapExchangeRateToDto)
+                .toList();
+        resp.getWriter().println(mapper.writeValueAsString(exchangeRateDtos));
     }
 
     @Override
@@ -57,9 +60,9 @@ public class ExchangeRatesServlet extends HttpServlet {
         Currency c1 = currencyDao.getCurrencyByCode(code1);
         Currency c2 = currencyDao.getCurrencyByCode(code2);
 
-        erDao.addExchangeRate(c1.getId(), c2.getId(), rate);
+        ExchangeRateDto exchangeRateDto = MapperToDto.mapExchangeRateToDto(erDao.addExchangeRate(c1, c2, rate));
 
         resp.setStatus(HttpServletResponse.SC_CREATED);
-        resp.getWriter().println(mapper.writeValueAsString(new ExchangeRate(c1, c2, rate)));
+        resp.getWriter().println(mapper.writeValueAsString(exchangeRateDto));
     }
 }

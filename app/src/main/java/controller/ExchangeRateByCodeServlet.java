@@ -1,6 +1,7 @@
 package controller;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
+import dto.ExchangeRateDto;
 import exception.InvalidParametersException;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.annotation.WebServlet;
@@ -10,6 +11,7 @@ import jakarta.servlet.http.HttpServletResponse;
 
 import model.ExchangeRate;
 import dao.ExchangeRatesDao;
+import util.MapperToDto;
 import util.ParamValidator;
 
 import javax.sql.DataSource;
@@ -52,8 +54,8 @@ public class ExchangeRateByCodeServlet extends HttpServlet {
         String code = pathInfo.substring(1);
         ParamValidator.validateCurrencyPair(code);
 
-        ExchangeRate er = erDao.getExchangeRateByCode(code);
-        resp.getWriter().println(mapper.writeValueAsString(er));
+        ExchangeRateDto exchangeRateDto = MapperToDto.mapExchangeRateToDto(erDao.getExchangeRateByCode(code));
+        resp.getWriter().println(mapper.writeValueAsString(exchangeRateDto));
     }
 
     protected void doPatch(HttpServletRequest req, HttpServletResponse resp) throws ServletException, IOException {
@@ -74,10 +76,11 @@ public class ExchangeRateByCodeServlet extends HttpServlet {
 
         BigDecimal newRate = new BigDecimal(rateStr);
 
-        ExchangeRate er = erDao.getExchangeRateByCode(code);
-        er.setRate(newRate);
+        ExchangeRate patchedExchangeRate = erDao.getExchangeRateByCode(code);
+        patchedExchangeRate.setRate(newRate);
+        erDao.updateExchangeRate(patchedExchangeRate.getBaseCurrency().getId(), patchedExchangeRate.getTargetCurrency().getId(), newRate);
 
-        erDao.updateExchangeRate(er.getBaseCurrency().getId(), er.getTargetCurrency().getId(), newRate);
-        resp.getWriter().println(mapper.writeValueAsString(er));
+        ExchangeRateDto exchangeRateDto = MapperToDto.mapExchangeRateToDto(patchedExchangeRate);
+        resp.getWriter().println(mapper.writeValueAsString(exchangeRateDto));
     }
 }
