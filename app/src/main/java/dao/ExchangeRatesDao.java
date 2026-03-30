@@ -68,22 +68,28 @@ public class ExchangeRatesDao {
         }
     }
 
-    public boolean addExchangeRate(int baseCurrencyId, int targetCurrencyId, BigDecimal rate) {
+    public ExchangeRate addExchangeRate(Currency baseCurrency, Currency targetCurrency, BigDecimal rate) {
         String query =
                 "INSERT INTO ExchangeRates (BaseCurrencyId, TargetCurrencyId, Rate) " +
                 "VALUES (?, ?, ?)";
         try (Connection conn = dataSource.getConnection();
-             PreparedStatement ps = conn.prepareStatement(query)) {
+             PreparedStatement ps = conn.prepareStatement(query, Statement.RETURN_GENERATED_KEYS)) {
 
-            ps.setInt(1, baseCurrencyId);
-            ps.setInt(2, targetCurrencyId);
+            ps.setInt(1, baseCurrency.getId());
+            ps.setInt(2, targetCurrency.getId());
             ps.setBigDecimal(3, rate);
 
-            int rows = ps.executeUpdate();
-            return rows > 0;
+            ps.executeUpdate();
+
+            try (ResultSet keys = ps.getGeneratedKeys()) {
+                if (keys.next()) {
+                    int id = keys.getInt(1);
+                    return new ExchangeRate(id, baseCurrency, targetCurrency, rate);
+                }
+            }
+            throw new DatabaseException("No generated keys");
         } catch(SQLException e) {
-            String sqlState = e.getSQLState();
-            if (sqlState != null && sqlState.startsWith("23")) {
+            if (e.getMessage() != null && e.getMessage().contains("UNIQUE")) {
                 throw new AlreadyExistsException("Exchange rate with this pair already exists", e);
             } else {
                 throw new DatabaseException(e);
@@ -91,8 +97,9 @@ public class ExchangeRatesDao {
         }
     }
 
-    public boolean updateExchangeRate(int baseCurrencyId, int targetCurrencyId, BigDecimal newRate) {
+    public void updateExchangeRate(int baseCurrencyId, int targetCurrencyId, BigDecimal newRate) {
         String query = "UPDATE ExchangeRates SET rate = ? WHERE baseCurrencyId = ? and targetCurrencyId = ?";
+
         try (Connection conn = dataSource.getConnection();
              PreparedStatement ps = conn.prepareStatement(query)) {
 
@@ -100,8 +107,7 @@ public class ExchangeRatesDao {
             ps.setInt(2, baseCurrencyId);
             ps.setInt(3, targetCurrencyId);
 
-            int rows = ps.executeUpdate();
-            return rows > 0;
+            ps.executeUpdate();
         } catch(SQLException e) {
             throw new DatabaseException(e);
         }
