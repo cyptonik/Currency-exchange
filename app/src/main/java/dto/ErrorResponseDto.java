@@ -1,7 +1,7 @@
 package dto;
 
 public class ErrorResponseDto {
-    private String message;
+    private final String message;
 
     public ErrorResponseDto(String message) {
         this.message = message;
