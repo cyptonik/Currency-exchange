@@ -15,7 +15,7 @@ public class ExchangeDto {
     public ExchangeDto(CurrencyDto baseCurrency, CurrencyDto targetCurrency, BigDecimal rate, BigDecimal amount, BigDecimal convertedAmount) {
         this.baseCurrency = baseCurrency;
         this.targetCurrency = targetCurrency;
-        this.rate = rate.setScale(2, RoundingMode.HALF_EVEN);
+        this.rate = rate;
         this.amount = amount.setScale(2, RoundingMode.HALF_EVEN);
         this.convertedAmount = convertedAmount.setScale(2, RoundingMode.HALF_EVEN);
     }

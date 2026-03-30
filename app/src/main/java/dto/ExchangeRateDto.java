@@ -15,7 +15,7 @@ public class ExchangeRateDto {
         this.id = id;
         this.baseCurrency = baseCurrency;
         this.targetCurrency = targetCurrency;
-        this.rate = rate.setScale(2, RoundingMode.HALF_EVEN);
+        this.rate = rate;
     }
 
     public int getId() {
