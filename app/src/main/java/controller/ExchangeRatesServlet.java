@@ -54,6 +54,7 @@ public class ExchangeRatesServlet extends HttpServlet {
         String rateParam = req.getParameter("rate");
 
         ParamValidator.validateNotNull(code1, code2, rateParam);
+        ParamValidator.validateAmount(rateParam);
 
         BigDecimal rate = new BigDecimal(rateParam);
 

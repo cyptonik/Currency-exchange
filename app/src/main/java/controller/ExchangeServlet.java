@@ -40,6 +40,7 @@ public class ExchangeServlet extends HttpServlet {
         String amountStr = req.getParameter("amount");
 
         ParamValidator.validateNotNull(from, to, amountStr);
+        ParamValidator.validateAmount(amountStr);
         BigDecimal amount = new BigDecimal(amountStr);
 
         ExchangeDto exchangeDto = exchangeService.convert(from, to, amount);

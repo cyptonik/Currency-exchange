@@ -74,6 +74,7 @@ public class ExchangeRateByCodeServlet extends HttpServlet {
                                             .findFirst()
                                             .orElseThrow(() -> new InvalidParametersException("Rate parameter is missing"));
 
+        ParamValidator.validateAmount(rateStr);
         BigDecimal newRate = new BigDecimal(rateStr);
 
         ExchangeRate patchedExchangeRate = erDao.getExchangeRateByCode(code);
