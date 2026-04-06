@@ -250,22 +250,15 @@
             <strong>Ответ сервера</strong>
             <button id="clearOutputBtn" class="secondary" style="padding: 4px 14px;">Очистить</button>
         </div>
-        <pre id="rawResponse">// Нажмите любую кнопку — запрос отправится к API
-// Отображается статус HTTP и тело ответа (как есть, без изменений)
-// Никакой клиентской обработки ошибок.</pre>
+        <pre id="rawResponse">// Нажмите любую кнопку — запрос отправится к API</pre>
     </div>
 </div>
 
 <script>
-    // ---------- ФИКСИРОВАННЫЙ БАЗОВЫЙ URL (бэкенд) ----------
     const API_BASE = 'http://154.59.225.141:8080/currency-exchange';
 
-    // Элементы вывода
     const outputPre = document.getElementById('rawResponse');
 
-    // ----- ЕДИНАЯ ФУНКЦИЯ ЗАПРОСА: БЕЗ ОБРАБОТКИ ОШИБОК НА ФРОНТЕ -----
-    // Возвращает сырой текст и статус, любые ошибки сети выводятся как есть.
-    // Никаких дополнительных проверок на "успешность" ответа — backend возвращает что возвращает.
     async function rawFetch(method, endpoint, bodyData = null, useFormUrlEncoded = true) {
         const url = `${API_BASE}${endpoint}`;
         const options = {
@@ -288,40 +281,31 @@
         try {
             const response = await fetch(url, options);
             const status = response.status;
-            // получаем тело как текст (даже если JSON — показываем raw)
             const rawText = await response.text();
             return { status, rawText };
         } catch (networkError) {
-            // Если сеть недоступна / CORS / разрыв соединения — показываем именно ту ошибку,
-            // без дополнительных "кастомных" сообщений. Просто выводим что получили.
             return { status: 0, rawText: `[NETWORK ERROR] ${networkError.message || 'Не удалось выполнить запрос'}` };
         }
     }
 
-    // отображение в пре: статус + тело
     function displayResponse(status, rawText) {
         let statusLine = (status === 0) ? 'СЕТЕВАЯ ОШИБКА (нет ответа от сервера)' : `HTTP статус: ${status}`;
         let output = `${statusLine}\n\n━━━━━━ ТЕЛО ОТВЕТА ━━━━━━━━━━━━━━━━━━━━\n${rawText}`;
         outputPre.innerText = output;
     }
 
-    // вспомогательная обёртка для единообразия
     async function sendAndDisplay(method, endpoint, body = null, formEncoded = true) {
         const { status, rawText } = await rawFetch(method, endpoint, body, formEncoded);
         displayResponse(status, rawText);
     }
 
     // ---- КНОПКИ: ВСЕ ЗАПРОСЫ БЕЗ ПРОВЕРОК, БЕЗ КАСТОМНЫХ ОШИБОК ----
-
-    // 1. Валюты
     document.getElementById('btnGetCurrencies').onclick = () => {
         sendAndDisplay('GET', '/currencies');
     };
 
     document.getElementById('btnGetCurrency').onclick = () => {
         let code = document.getElementById('currencyCode').value;
-        // отправляем как есть, даже пустую строку — backend ответит сам.
-        // экранирование для безопасности, но никакой валидации.
         const endpoint = `/currency/${encodeURIComponent(code)}`;
         sendAndDisplay('GET', endpoint);
     };
@@ -373,7 +357,7 @@
 
     // Очистка области вывода (просто UI, не влияет на запросы)
     document.getElementById('clearOutputBtn').onclick = () => {
-        outputPre.innerText = '// Очищено. Нажмите любую кнопку для нового запроса.\n// Ответ сервера будет показан здесь без изменений.';
+        outputPre.innerText = '// Очищено. Нажмите любую кнопку для нового запроса.';
     };
 </script>
 </body>
