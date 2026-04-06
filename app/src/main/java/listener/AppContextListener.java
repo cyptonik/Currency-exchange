@@ -17,7 +17,7 @@ public class AppContextListener implements ServletContextListener {
     @Override
     public void contextInitialized(ServletContextEvent sce) {
         HikariConfig config = new HikariConfig();
-        config.setJdbcUrl("jdbc:sqlite:/var/lib/tomcat10/currency.db");
+        config.setJdbcUrl("jdbc:sqlite:/opt/tomcat/currency.db");
         config.setDriverClassName("org.sqlite.JDBC");
         config.setMaximumPoolSize(1);
         HikariDataSource ds = new HikariDataSource(config);
