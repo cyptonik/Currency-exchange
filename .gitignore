@@ -9,3 +9,4 @@ src/build
 .idea/
 .gradle/
 src/app/build/
+src/deploy.sh
