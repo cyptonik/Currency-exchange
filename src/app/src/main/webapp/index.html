@@ -1,0 +1,364 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Currency Exchange · Raw API Client</title>
+    <style>
+        * {
+            box-sizing: border-box;
+        }
+        body {
+            background: #eef2f5;
+            margin: 0;
+            padding: 1.5rem;
+            font-family: system-ui, 'Segoe UI', Roboto, 'Helvetica Neue', sans-serif;
+        }
+        .main {
+            max-width: 1300px;
+            margin: 0 auto;
+        }
+        h1 {
+            font-size: 1.7rem;
+            font-weight: 600;
+            margin: 0 0 0.2rem 0;
+            color: #1a2c3e;
+        }
+        .sub {
+            color: #2c4c6e;
+            margin-bottom: 1.8rem;
+            font-size: 0.9rem;
+            border-left: 3px solid #3a7ca5;
+            padding-left: 1rem;
+        }
+        /* простая сетка */
+        .row-blocks {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 1.5rem;
+            margin-bottom: 2rem;
+        }
+        .card {
+            background: white;
+            border-radius: 1rem;
+            box-shadow: 0 2px 6px rgba(0,0,0,0.05);
+            padding: 1.2rem 1.4rem 1.6rem;
+            flex: 1;
+            min-width: 280px;
+            border: 1px solid #dce5ec;
+        }
+        .card h2 {
+            font-size: 1.3rem;
+            margin: 0 0 1rem 0;
+            font-weight: 600;
+            color: #1e2f3f;
+            border-bottom: 2px solid #e2edf2;
+            padding-bottom: 0.4rem;
+        }
+        .method-badge {
+            font-family: monospace;
+            font-weight: bold;
+            display: inline-block;
+            font-size: 0.7rem;
+            padding: 2px 8px;
+            border-radius: 30px;
+            margin-right: 6px;
+        }
+        .get { background: #dff0e4; color: #1a6d3c; }
+        .post { background: #ffe6e5; color: #b13b2d; }
+        .patch { background: #fff0db; color: #b1620c; }
+        .endpoint-path {
+            font-family: monospace;
+            background: #f2f6f9;
+            padding: 4px 8px;
+            border-radius: 12px;
+            font-size: 0.75rem;
+            word-break: break-all;
+            margin: 8px 0 12px 0;
+            display: inline-block;
+        }
+        label {
+            font-size: 0.75rem;
+            font-weight: 500;
+            color: #2c4a6e;
+            display: block;
+            margin-top: 10px;
+            margin-bottom: 4px;
+        }
+        input, select {
+            width: 100%;
+            padding: 8px 10px;
+            border-radius: 12px;
+            border: 1px solid #cbdbe0;
+            background: white;
+            font-size: 0.85rem;
+            margin-bottom: 6px;
+            transition: 0.1s;
+        }
+        button {
+            background: #1f3b4c;
+            color: white;
+            border: none;
+            border-radius: 40px;
+            padding: 7px 16px;
+            font-weight: 500;
+            font-size: 0.8rem;
+            margin-top: 8px;
+            cursor: pointer;
+            width: auto;
+            min-width: 110px;
+        }
+        button:hover {
+            background: #0e2a38;
+        }
+        .flex-row {
+            display: flex;
+            gap: 12px;
+            flex-wrap: wrap;
+            align-items: flex-end;
+        }
+        .flex-row .field-group {
+            flex: 1;
+        }
+        hr {
+            margin: 1rem 0;
+            border: 0;
+            height: 1px;
+            background: #e2eaf0;
+        }
+        .output-area {
+            background: white;
+            border-radius: 1rem;
+            padding: 1.2rem 1.4rem;
+            margin-top: 0.5rem;
+            border: 1px solid #dce5ec;
+        }
+        .output-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: baseline;
+            margin-bottom: 10px;
+            flex-wrap: wrap;
+        }
+        pre {
+            background: #0f1722;
+            color: #eef2ff;
+            padding: 14px;
+            border-radius: 14px;
+            overflow-x: auto;
+            font-size: 0.8rem;
+            font-family: 'SF Mono', 'Monaco', monospace;
+            margin: 0;
+            white-space: pre-wrap;
+            word-wrap: break-word;
+            max-height: 460px;
+        }
+        button.secondary {
+            background: #4a627a;
+        }
+        button.secondary:hover {
+            background: #2c4c6e;
+        }
+        small {
+            font-size: 0.7rem;
+            color: #5f7f9e;
+        }
+        @media (max-width: 720px) {
+            body { padding: 1rem; }
+            .card { padding: 1rem; }
+        }
+    </style>
+</head>
+<body>
+<div class="main">
+    <h1>Обмен валют</h1>
+
+    <div class="row-blocks">
+        <!-- Блок: Валюты -->
+        <div class="card">
+            <h2>Валюты</h2>
+
+            <div><span class="method-badge get">GET</span> <span class="endpoint-path">/currencies</span></div>
+            <button id="btnGetCurrencies">Получить все валюты</button>
+
+            <hr>
+            <div><span class="method-badge get">GET</span> <span class="endpoint-path">/currency/{code}</span></div>
+            <label>Код валюты (USD, EUR, ...)</label>
+            <input type="text" id="currencyCode" placeholder="Например: USD, EUR, BTC">
+            <button id="btnGetCurrency">Найти валюту</button>
+
+            <hr>
+            <div><span class="method-badge post">POST</span> <span class="endpoint-path">/currencies</span></div>
+            <label>FullName (название)</label>
+            <input type="text" id="newCurrName" placeholder="Euro, Bitcoin, Dollar">
+            <label>Код (Code)</label>
+            <input type="text" id="newCurrCode" placeholder="EUR, BTC, USD">
+            <label>Знак (Sign)</label>
+            <input type="text" id="newCurrSign" placeholder="€, ₿, $">
+            <button id="btnAddCurrency">Добавить валюту</button>
+        </div>
+
+        <!-- Блок: курсы -->
+        <div class="card">
+            <h2>Обменные курсы</h2>
+
+            <div><span class="method-badge get">GET</span> <span class="endpoint-path">/exchangeRates</span></div>
+            <button id="btnGetRates">Получить все курсы</button>
+
+            <hr>
+            <div><span class="method-badge get">GET</span> <span class="endpoint-path">/exchangeRate/USDRUB</span></div>
+            <label>Валютная пара (например, USDRUB, EURUSD)</label>
+            <input type="text" id="pairCode" placeholder="USDRUB, EURUSD, USDEUR">
+            <button id="btnGetRatePair">Найти курс по паре</button>
+
+            <hr>
+            <div><span class="method-badge post">POST</span> <span class="endpoint-path">/exchangeRates</span></div>
+            <div class="flex-row">
+                <div class="field-group"><label>Base код</label><input type="text" id="baseCode" placeholder="USD"></div>
+                <div class="field-group"><label>Target код</label><input type="text" id="targetCode" placeholder="RUB"></div>
+            </div>
+            <label>Курс (rate)</label>
+            <input type="text" id="newRate" placeholder="92.50">
+            <button id="btnAddRate">Добавить курс</button>
+
+            <hr>
+            <div><span class="method-badge patch">PATCH</span> <span class="endpoint-path">/exchangeRate/USDRUB</span></div>
+            <div class="flex-row">
+                <div class="field-group"><label>Пара (напр. USDRUB)</label><input type="text" id="patchPair" placeholder="USDRUB"></div>
+                <div class="field-group"><label>Новый rate</label><input type="text" id="patchRateVal" placeholder="88.12"></div>
+            </div>
+            <button id="btnPatchRate">Обновить курс</button>
+        </div>
+
+        <!-- Блок конвертации -->
+        <div class="card">
+            <h2>Конвертация</h2>
+            <div><span class="method-badge get">GET</span> <span class="endpoint-path">/exchange?from=USD&to=EUR&amount=100</span></div>
+            <div class="flex-row">
+                <div class="field-group"><label>Из (from)</label><input type="text" id="convertFrom" placeholder="USD"></div>
+                <div class="field-group"><label>В (to)</label><input type="text" id="convertTo" placeholder="EUR"></div>
+            </div>
+            <label>Сумма</label>
+            <input type="text" id="convertAmount" placeholder="100">
+            <button id="btnConvert">Конвертировать</button>
+        </div>
+    </div>
+
+    <!-- Единая область вывода: сырой ответ -->
+    <div class="output-area">
+        <div class="output-header">
+            <strong>Ответ сервера</strong>
+            <button id="clearOutputBtn" class="secondary" style="padding: 4px 14px;">Очистить</button>
+        </div>
+        <pre id="rawResponse">// Нажмите любую кнопку — запрос отправится к API</pre>
+    </div>
+</div>
+
+<script>
+    const API_BASE = 'http://154.59.225.141:8080/currency-exchange';
+
+    const outputPre = document.getElementById('rawResponse');
+
+    async function rawFetch(method, endpoint, bodyData = null, useFormUrlEncoded = true) {
+        const url = `${API_BASE}${endpoint}`;
+        const options = {
+            method: method,
+            headers: {
+                'Accept': 'application/json'
+            }
+        };
+
+        if (bodyData && (method === 'POST' || method === 'PATCH')) {
+            if (useFormUrlEncoded) {
+                options.headers['Content-Type'] = 'application/x-www-form-urlencoded';
+                options.body = new URLSearchParams(bodyData).toString();
+            } else {
+                options.headers['Content-Type'] = 'application/json';
+                options.body = JSON.stringify(bodyData);
+            }
+        }
+
+        try {
+            const response = await fetch(url, options);
+            const status = response.status;
+            const rawText = await response.text();
+            return { status, rawText };
+        } catch (networkError) {
+            return { status: 0, rawText: `[NETWORK ERROR] ${networkError.message || 'Не удалось выполнить запрос'}` };
+        }
+    }
+
+    function displayResponse(status, rawText) {
+        let statusLine = (status === 0) ? 'СЕТЕВАЯ ОШИБКА (нет ответа от сервера)' : `HTTP статус: ${status}`;
+        let output = `${statusLine}\n\n━━━━━━ ТЕЛО ОТВЕТА ━━━━━━━━━━━━━━━━━━━━\n${rawText}`;
+        outputPre.innerText = output;
+    }
+
+    async function sendAndDisplay(method, endpoint, body = null, formEncoded = true) {
+        const { status, rawText } = await rawFetch(method, endpoint, body, formEncoded);
+        displayResponse(status, rawText);
+    }
+
+    // ---- КНОПКИ: ВСЕ ЗАПРОСЫ БЕЗ ПРОВЕРОК, БЕЗ КАСТОМНЫХ ОШИБОК ----
+    document.getElementById('btnGetCurrencies').onclick = () => {
+        sendAndDisplay('GET', '/currencies');
+    };
+
+    document.getElementById('btnGetCurrency').onclick = () => {
+        let code = document.getElementById('currencyCode').value;
+        const endpoint = `/currency/${encodeURIComponent(code)}`;
+        sendAndDisplay('GET', endpoint);
+    };
+
+    document.getElementById('btnAddCurrency').onclick = () => {
+        const name = document.getElementById('newCurrName').value;
+        const code = document.getElementById('newCurrCode').value;
+        const sign = document.getElementById('newCurrSign').value;
+        const formBody = { name, code, sign };
+        sendAndDisplay('POST', '/currencies', formBody, true);
+    };
+
+    // 2. Курсы
+    document.getElementById('btnGetRates').onclick = () => {
+        sendAndDisplay('GET', '/exchangeRates');
+    };
+
+    document.getElementById('btnGetRatePair').onclick = () => {
+        let pair = document.getElementById('pairCode').value;
+        const endpoint = `/exchangeRate/${encodeURIComponent(pair)}`;
+        sendAndDisplay('GET', endpoint);
+    };
+
+    document.getElementById('btnAddRate').onclick = () => {
+        const baseCurrencyCode = document.getElementById('baseCode').value;
+        const targetCurrencyCode = document.getElementById('targetCode').value;
+        const rate = document.getElementById('newRate').value;
+        const formBody = { baseCurrencyCode, targetCurrencyCode, rate };
+        sendAndDisplay('POST', '/exchangeRates', formBody, true);
+    };
+
+    document.getElementById('btnPatchRate').onclick = () => {
+        let pair = document.getElementById('patchPair').value;
+        const newRate = document.getElementById('patchRateVal').value;
+        const endpoint = `/exchangeRate/${encodeURIComponent(pair)}`;
+        const formBody = { rate: newRate };
+        sendAndDisplay('PATCH', endpoint, formBody, true);
+    };
+
+    // 3. Конвертация
+    document.getElementById('btnConvert').onclick = () => {
+        const fromVal = document.getElementById('convertFrom').value;
+        const toVal = document.getElementById('convertTo').value;
+        const amountVal = document.getElementById('convertAmount').value;
+        // строим URL с query-параметрами
+        const query = `/exchange?from=${encodeURIComponent(fromVal)}&to=${encodeURIComponent(toVal)}&amount=${encodeURIComponent(amountVal)}`;
+        sendAndDisplay('GET', query);
+    };
+
+    // Очистка области вывода (просто UI, не влияет на запросы)
+    document.getElementById('clearOutputBtn').onclick = () => {
+        outputPre.innerText = '// Очищено. Нажмите любую кнопку для нового запроса.';
+    };
+</script>
+</body>
+</html>
